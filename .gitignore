@@ -1,0 +1,23 @@
+# Byte-compiled files
+*.pyc
+*.pyo
+__pycache__/
+
+# Virtual environment
+venv/
+.env
+
+# IDE/editor configurations
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Databases
+*.sqlite3
+*.db
+
+# Build directories
+build/
+dist/
