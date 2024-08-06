@@ -86,7 +86,7 @@ def send_verification_email(email: str, token: str):
     try:
         with smtplib.SMTP('smtp.gmail.com', port=587) as server:
             server.starttls()  # Secure the connection
-            server.login('rajps@infusionanalysts.com', 'reqp qqjt pdrd dydz')  # If authentication is needed
+            server.login('EMAIL_USER', 'EMAIL_PASSWORD')  # If authentication is needed
             server.send_message(message)
         print(f"Verification email sent to {email}")
     except Exception as e:
