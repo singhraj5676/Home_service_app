@@ -16,7 +16,6 @@ def update_user_details(db: Session, user_update: User_Update):
     user.first_name = user_update.first_name
     user.last_name = user_update.last_name
     user.email = user_update.email
-    user.hashed_password = user_update.hashed_password
     user.disabled = user_update.disabled
     user.is_verified = user_update.is_verified
     user.is_online = user_update.is_online

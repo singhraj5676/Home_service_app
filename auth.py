@@ -30,11 +30,11 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-def get_user(db: Session, username: str):
-    return db.query(UserInDB).filter(UserInDB.username == username).first()
+def get_user(db: Session, email: str):
+    return db.query(UserInDB).filter(UserInDB.email == email).first()
 
-def authenticate_user(db: Session, username: str, password: str):
-    user = db.query(UserInDB).filter(UserInDB.username == username).first()
+def authenticate_user(db: Session, email: str, password: str):
+    user = db.query(UserInDB).filter(UserInDB.email == email).first()
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
@@ -65,20 +65,39 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Se
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-        token_data = TokenData(username=username)
+        email: str = payload.get("sub")
+        token_data = TokenData(email=email)
     except InvalidTokenError:
         raise credentials_exception
-    user = get_user(db, username=token_data.username)
+    user = get_user(db, email=token_data.email)
     if user is None:
         raise credentials_exception
     return user
 
-async def get_current_active_user(
-    current_user: Annotated[User_Response, Depends(get_current_user)],
-):
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
+def get_current_active_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = verify_token(token)
+        print(payload)
+        user = db.query(UserInDB).filter(UserInDB.email == payload["sub"]).first()
+        print(user)
+        if user is None:
+            raise credentials_exception
+    except Exception:
+        raise credentials_exception 
+    return user
+
+
+def verify_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        print('******',payload)
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
