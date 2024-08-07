@@ -5,7 +5,7 @@ from routers.main_router import router
 from config import DATABASE_CONFIG
 from database import POSTGRES_API
 from routers import auth_routes, user_routes
-from models.verification_models import VerificationToken  # Ensure import
+from models.verification_token import VerificationToken  # Ensure import
 
 
 
@@ -19,6 +19,7 @@ def startup():
 
 app.include_router(auth_routes.router, prefix="/auth")
 app.include_router(user_routes.router, prefix="/users")
+# app.include_router(user_routes.router, prefix="/users")
 
 if __name__ == '__main__':
     import uvicorn

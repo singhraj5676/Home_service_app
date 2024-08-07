@@ -4,7 +4,8 @@ from fastapi import Form
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel
-
+from models.user_profile import RoleEnum
+from response.user_response import User_Response
 
 class Token(BaseModel):
     access_token: str
@@ -14,19 +15,9 @@ class TokenData(BaseModel):
     username: str | None = None
     email: str | None = None
 
-class User_Response(BaseModel):
-    id: uuid.UUID
-    first_name: str
-    last_name: Optional[str] = None
-    email: str
-    phone_number: Optional[str] = None
-    is_verified: bool
-    is_online: bool
-    is_suspended: bool
-    last_login: Optional[datetime] = None
 
-    class Config:
-        orm_mode = True
+class User_Registration_Response(BaseModel):
+    id: uuid.UUID
 
 class UserInDB(User_Response):
     hashed_password: str
@@ -63,7 +54,7 @@ class User_Update(BaseModel):
     domain: Optional[str] = None
     domain_language: Optional[str] = None
     last_login: Optional[datetime] = None
-
+    
     class Config:
         orm_mode = True
 class LocationCreate(BaseModel):
@@ -87,6 +78,7 @@ class UserProfileUpdate(BaseModel):
     personal_message: Optional[bool] = None
     duration: Optional[int] = None
     registered_date: Optional[int] = None
+    role: Optional[RoleEnum] = None
     
 
 class EmailPasswordForm(BaseModel):
@@ -100,3 +92,5 @@ class EmailPasswordForm(BaseModel):
         password: str = Form(...),
     ) -> "EmailPasswordForm":
         return cls(email=email, password=password)
+    
+

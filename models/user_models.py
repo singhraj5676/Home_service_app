@@ -1,6 +1,7 @@
 #models/user_models.py
 import uuid
 from models.base import Base
+from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Column, String, Boolean, Float , Integer, DateTime
 
@@ -26,4 +27,9 @@ class UserInDB(Base):
     domain_language = Column(String, nullable=True)
     last_login = Column(DateTime, nullable=True)
     disabled = Column(Boolean, default=False)
+   
 
+    location = relationship("Location", back_populates="user", uselist=False)
+    profile = relationship("UserProfile", back_populates="user", uselist=False)
+    verification_tokens = relationship("VerificationToken", back_populates="user")
+    verification_types = relationship("VerificationType", back_populates="user")

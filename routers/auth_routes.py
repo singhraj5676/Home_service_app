@@ -9,7 +9,7 @@ from models.user_models import UserInDB
 from schemas.auth_models import Token, User_Response
 from fastapi import  Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from models.verification_models import VerificationToken
+from models.verification_token import VerificationToken
 from auth import (authenticate_user, create_access_token, get_current_active_user,ACCESS_TOKEN_EXPIRE_MINUTES)
 from schemas.auth_models import EmailPasswordForm
 
@@ -55,21 +55,21 @@ async def read_own_items(
 
 
 # routers/auth_routes.py
-@router.get("/verify/{token}", response_model=User_Response)
-async def verify_token(token: str, db: Session = Depends(get_db)):
-    verification = db.query(VerificationToken).filter(VerificationToken.token == token).first()
-    if verification is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token")
-    if verification.expiration < datetime.utcnow():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Token expired")
+# @router.get("/verify/{token}", response_model=User_Response)
+# async def verify_token(token: str, db: Session = Depends(get_db)):
+#     verification = db.query(VerificationToken).filter(VerificationToken.token == token).first()
+#     if verification is None:
+#         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token")
+#     if verification.expiration < datetime.utcnow():
+#         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Token expired")
 
-    user = db.query(UserInDB).filter(UserInDB.id == verification.user_id).first()
-    if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+#     user = db.query(UserInDB).filter(UserInDB.id == verification.user_id).first()
+#     if user is None:
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    user.disabled = False
-    db.delete(verification)  # Remove the token after verification
-    db.commit()
+#     user.disabled = False
+#     db.delete(verification)  # Remove the token after verification
+#     db.commit()
 
-    return user
+#     return user
 
