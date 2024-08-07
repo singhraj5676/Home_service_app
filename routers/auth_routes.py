@@ -11,14 +11,15 @@ from fastapi import  Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from models.verification_models import VerificationToken
 from auth import (authenticate_user, create_access_token, get_current_active_user,ACCESS_TOKEN_EXPIRE_MINUTES)
-
+from schemas.auth_models import EmailPasswordForm
 
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    form_data: EmailPasswordForm = Depends(EmailPasswordForm.as_form),
     db: Session = Depends(get_db)
 ) -> Token:
-    user = authenticate_user(db, form_data.username, form_data.password)
+    
+    user = authenticate_user(db, form_data.email, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -33,7 +34,7 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.first_name,"email": user.email }, expires_delta=access_token_expires
+        data={"sub": user.email }, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
 
@@ -50,7 +51,7 @@ def read_users_me(
 async def read_own_items(
     current_user: Annotated[User_Response, Depends(get_current_active_user)],
 ):
-    return [{"item_id": current_user.id, "owner": current_user.username}]
+    return [{"item_id": current_user.id}]
 
 
 # routers/auth_routes.py

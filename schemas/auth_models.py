@@ -1,5 +1,6 @@
 # models/auth_models.py
 import uuid
+from fastapi import Form
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel
@@ -15,6 +16,17 @@ class TokenData(BaseModel):
 
 class User_Response(BaseModel):
     id: uuid.UUID
+    first_name: str
+    last_name: Optional[str] = None
+    email: str
+    phone_number: Optional[str] = None
+    is_verified: bool
+    is_online: bool
+    is_suspended: bool
+    last_login: Optional[datetime] = None
+
+    class Config:
+        orm_mode = True
 
 class UserInDB(User_Response):
     hashed_password: str
@@ -25,13 +37,22 @@ class UserCreate(BaseModel):
     password: str
     phone_number: Optional[str] = None
 
+class User_Base(BaseModel): 
+    first_name: str
+    email: str
+    last_name: str
+    password: str
+    phone_number: Optional[str] = None
+    domain: Optional[str] = None
+    domain_language: Optional[str] = None
+    disabled: Optional[bool] = None
+    
 
 class User_Update(BaseModel):
     id: uuid.UUID
     first_name: str
     last_name: Optional[str] = None
     email: str
-    hashed_password: str
     disabled: bool = False
     is_verified: bool = False
     is_online: bool = False
@@ -45,17 +66,6 @@ class User_Update(BaseModel):
 
     class Config:
         orm_mode = True
-
-class User_Base(BaseModel): 
-    first_name: str
-    email: str
-    last_name: str
-    password: str
-    phone_number: Optional[str] = None
-    domain: Optional[str] = None
-    domain_language: Optional[str] = None
-    disabled: Optional[bool] = None
-
 class LocationCreate(BaseModel):
     address: str
     latitude: Optional[float] = None
@@ -65,7 +75,6 @@ class LocationCreate(BaseModel):
     country: str
     country_code: str
     place_id: Optional[str] = None
-
 
 class UserProfileUpdate(BaseModel):
     max_distance: Optional[int] = None
@@ -78,3 +87,16 @@ class UserProfileUpdate(BaseModel):
     personal_message: Optional[bool] = None
     duration: Optional[int] = None
     registered_date: Optional[int] = None
+    
+
+class EmailPasswordForm(BaseModel):
+    email: str
+    password: str
+
+    @classmethod
+    async def as_form(
+        cls,
+        email: str = Form(...),
+        password: str = Form(...),
+    ) -> "EmailPasswordForm":
+        return cls(email=email, password=password)

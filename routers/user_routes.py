@@ -3,7 +3,7 @@
 import uuid
 import smtplib
 from uuid import uuid4
-from typing import Optional
+from typing import Optional, Annotated
 from database import get_db
 from twilio.rest import Client
 from .main_router import router
@@ -17,7 +17,8 @@ from models.verification_models import VerificationToken
 from models.verification_type_models import VerificationType
 from schemas.auth_models import User_Response, UserCreate, User_Update, UserProfileUpdate, LocationCreate
 from profile_update_service import update_user_details, update_user_profile, update_location
-
+from consts.const import EMAIL_PASSWORD, EMAIL_USER
+from auth import (get_current_active_user,get_current_user)
 
 @router.post("/register", response_model=User_Response)
 async def register_user(user: UserCreate, db: Session = Depends(get_db)):
@@ -38,7 +39,7 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
     # Hash the password
     hashed_password = get_password_hash(user.password)
 
-    # Create a new user
+    # Create a new user     
     new_user = UserInDB(
         email=user.email,
         hashed_password=hashed_password,
@@ -83,14 +84,14 @@ def send_verification_email(email: str, token: str):
     message['From'] = 'rajps@infusionanalysts.com'
     message['To'] = email
 
-    try:
-        with smtplib.SMTP('smtp.gmail.com', port=587) as server:
-            server.starttls()  # Secure the connection
-            server.login('EMAIL_USER', 'EMAIL_PASSWORD')  # If authentication is needed
-            server.send_message(message)
-        print(f"Verification email sent to {email}")
-    except Exception as e:
-        print(f"Failed to send email: {e}")
+    # try:
+    with smtplib.SMTP('smtp.gmail.com', port=587) as server:
+        server.starttls()  # Secure the connection
+        server.login(EMAIL_USER, EMAIL_PASSWORD)  # If authentication is needed
+        server.send_message(message)
+    print(f"Verification email sent to {email}")
+    # except Exception as e:
+    #     print(f"Failed to send email: {e}")
 
 
 def send_verification_sms(phone_number: str, token: str):
@@ -173,6 +174,7 @@ def resend_verification(user_id: uuid.UUID, verification_type: str, db: Session 
 
 @router.post("/update-login")
 def update_last_login(user_id: uuid.UUID, db: Session = Depends(get_db)):
+    print('hii')
     user = db.query(UserInDB).filter(UserInDB.id == user_id).first()
     if user:
         user.last_login = datetime.utcnow()
@@ -201,3 +203,18 @@ def update_profile(
         update_location(db, user_update.id, location_create)
 
     return {"message": "User details, profile, and location updated successfully"}
+
+
+@router.get("/{user_id}", response_model=User_Response)
+def get_user_by_id(
+    user_id: uuid.UUID,
+    current_user: Annotated[User_Response, Depends(get_current_active_user)],
+    db: Session = Depends(get_db)
+):
+    if current_user.id != user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this user")
+    
+    user = db.query(UserInDB).filter(UserInDB.id == user_id).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user

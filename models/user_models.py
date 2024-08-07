@@ -25,3 +25,5 @@ class UserInDB(Base):
     domain = Column(String, nullable=True)
     domain_language = Column(String, nullable=True)
     last_login = Column(DateTime, nullable=True)
+    disabled = Column(Boolean, default=False)
+
