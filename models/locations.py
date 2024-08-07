@@ -1,6 +1,7 @@
 #models/location.py
 
 from models.base import Base
+from sqlalchemy.orm import relationship
 from models.user_models import UserInDB
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Column, String, Float, Integer, ForeignKey
@@ -18,4 +19,7 @@ class Location(Base):
     country = Column(String, nullable=False)
     country_code = Column(String, nullable=False)
     place_id = Column(String, nullable=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey(UserInDB.id), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
+
+
+    user = relationship("UserInDB", back_populates="location")

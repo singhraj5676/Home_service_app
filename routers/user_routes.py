@@ -3,7 +3,7 @@
 import uuid
 import smtplib
 from uuid import uuid4
-from typing import Optional, Annotated
+from typing import Optional, Annotated, List
 from database import get_db
 from twilio.rest import Client
 from .main_router import router
@@ -13,14 +13,19 @@ from email.mime.text import MIMEText
 from models.user_models import UserInDB
 from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException, status
-from models.verification_models import VerificationToken
-from models.verification_type_models import VerificationType
-from schemas.auth_models import User_Response, UserCreate, User_Update, UserProfileUpdate, LocationCreate
+from models.verification_token import VerificationToken
+from models.verification_type import VerificationType
+from schemas.auth_models import  UserCreate, User_Update, UserProfileUpdate, LocationCreate, User_Registration_Response 
 from profile_update_service import update_user_details, update_user_profile, update_location
 from consts.const import EMAIL_PASSWORD, EMAIL_USER
 from auth import (get_current_active_user,get_current_user)
+from models.locations import Location
+from models.user_profile import UserProfile
+from response.user_response import User_Response
+from sqlalchemy.orm import Session, joinedload
 
-@router.post("/register", response_model=User_Response)
+
+@router.post("/register", response_model=User_Registration_Response)
 async def register_user(user: UserCreate, db: Session = Depends(get_db)):
     # Check if the username or email already exists
     # existing_user = db.query(UserInDB).filter(UserInDB.first_name == user.first_name).first()
@@ -113,7 +118,7 @@ def send_verification_sms(phone_number: str, token: str):
     # return message
 
 
-@router.get("/verify/{token}", response_model=User_Response)
+@router.get("/verify/{token}", response_model=User_Registration_Response)
 def verify_token(token: str, db: Session = Depends(get_db)):
     verification = db.query(VerificationToken).filter(VerificationToken.token == token).first()
     if verification is None:
@@ -205,16 +210,88 @@ def update_profile(
     return {"message": "User details, profile, and location updated successfully"}
 
 
+# @router.get("/{user_id}", response_model=User_Response)
+# def get_user_by_id(
+#     user_id: uuid.UUID,
+#     current_user: Annotated[User_Response, Depends(get_current_active_user)],
+#     db: Session = Depends(get_db)
+# ):
+#     if current_user.id != user_id:
+#         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this user")
+    
+#     user = db.query(UserInDB).filter(UserInDB.id == user_id).first()
+#     print(user)
+#     print(Location.user_id)
+#     if user is None:
+#         raise HTTPException(status_code=404, detail="User not found")
+#     return user
+
 @router.get("/{user_id}", response_model=User_Response)
 def get_user_by_id(
     user_id: uuid.UUID,
-    current_user: Annotated[User_Response, Depends(get_current_active_user)],
     db: Session = Depends(get_db)
 ):
-    if current_user.id != user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this user")
-    
-    user = db.query(UserInDB).filter(UserInDB.id == user_id).first()
+    user = db.query(UserInDB).options(joinedload(UserInDB.location)).filter(UserInDB.id == user_id).first()
+    print(user)
+    print(user.location)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+
+@router.get("/city/{city}", response_model=List[User_Response])
+def get_users_by_city(city: str, db: Session = Depends(get_db)):
+    # Query users based on city
+    users = db.query(UserInDB).join(Location).filter(Location.city == city).all()
+    
+    if not users:
+        raise HTTPException(status_code=404, detail="No users found in this city")
+    
+    return users
+
+@router.get("/slug/{slug}", response_model=List[User_Response])
+def get_users_by_slug(slug: str, db: Session = Depends(get_db)):
+    # Query users based on city
+    users = db.query(UserInDB).join(Location).filter(Location.slug == slug).all()
+    
+    if not users:
+        raise HTTPException(status_code=404, detail="No users found in this slug")
+    
+    return users
+
+@router.get("/get_workers_by_slug/{slug}", response_model=List[User_Response])
+def get_workers_by_slug(
+    slug: str,
+    db: Session = Depends(get_db)
+):  
+    # Query workers based on slug
+    workers = (
+        db.query(UserInDB)
+        .join(UserProfile)
+        .join(Location)
+        .filter(UserProfile.role == "worker", Location.slug == slug)
+        .all()
+    )
+    
+    if not workers:
+        raise HTTPException(status_code=404, detail="No workers found with this slug")
+    
+    return workers
+
+@router.get("/get_customers_by_slug/{slug}", response_model=List[User_Response])
+def get_customers_by_slug(
+    slug: str,
+    db: Session = Depends(get_db)
+):
+    customers = (
+        db.query(UserInDB)
+        .join(UserProfile)
+        .join(Location)
+        .filter(UserProfile.role == "customer", Location.slug == slug)
+        .all()
+    )
+
+    if not customers:
+        raise HTTPException(status_code=404, detail="No customers found with this slug")
+    
+    return customers 

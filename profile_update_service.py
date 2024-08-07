@@ -26,6 +26,8 @@ def update_user_details(db: Session, user_update: User_Update):
     user.domain = user_update.domain
     user.domain_language = user_update.domain_language
     user.last_login = user_update.last_login
+    
+
 
     db.commit()
     db.refresh(user)
@@ -46,6 +48,7 @@ def update_user_profile(db: Session, user_id: UUID, user_profile_update: UserPro
     user_profile.personal_message = user_profile_update.personal_message
     user_profile.duration = user_profile_update.duration
     user_profile.registered_date = user_profile_update.registered_date
+    user_profile.role = user_profile_update.role
 
     db.commit()
     db.refresh(user_profile)
