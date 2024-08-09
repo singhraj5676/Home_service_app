@@ -26,7 +26,7 @@ class UserProfile(Base):
     published = Column(Boolean, default=False)
     user_alert = Column(Boolean, default=True)
     personal_message = Column(Boolean, default=True)
-    duration = Column(Integer,default=0),
+    duration = Column(Integer,default=0)
     registered_date = Column(Integer, default=int(time.time()))
     role = Column(Enum(RoleEnum), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'),nullable=False)

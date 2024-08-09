@@ -15,8 +15,8 @@ from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException, status
 from models.verification_token import VerificationToken
 from models.verification_type import VerificationType
-from schemas.auth_models import  UserCreate, User_Update, UserProfileUpdate, LocationCreate, User_Registration_Response 
-from profile_update_service import update_user_details, update_user_profile, update_location
+from schemas.auth_models import  UserCreate, User_Update, UserProfileUpdate, LocationCreate, User_Registration_Response , UserCurrrencyCreate, UserLanguageCreate
+from profile_update_service import update_user_details, update_user_profile, update_location, update_currency, update_language
 from consts.const import EMAIL_PASSWORD, EMAIL_USER
 from auth import (get_current_active_user,get_current_user)
 from models.locations import Location
@@ -194,6 +194,9 @@ def update_profile(
     user_update: User_Update,
     user_profile_update: Optional[UserProfileUpdate] = None,
     location_create: Optional[LocationCreate] = None,
+    currency_create: Optional[UserCurrrencyCreate] = None,
+    language_create: Optional[UserLanguageCreate] = None,
+
     db: Session = Depends(get_db)
 ):
     # Update user details
@@ -206,6 +209,12 @@ def update_profile(
     # Update or create location
     if location_create:
         update_location(db, user_update.id, location_create)
+
+    if currency_create:
+        update_currency(db, user_update.id, currency_create)
+    
+    if language_create:
+        update_language(db, user_update.id, language_create)
 
     return {"message": "User details, profile, and location updated successfully"}
 
@@ -233,7 +242,6 @@ def get_user_by_id(
 ):
     user = db.query(UserInDB).options(joinedload(UserInDB.location)).filter(UserInDB.id == user_id).first()
     print(user)
-    print(user.location)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user

@@ -57,6 +57,15 @@ class User_Update(BaseModel):
     
     class Config:
         orm_mode = True
+class UserCurrrencyCreate(BaseModel):
+    code: str
+    name: str
+    symbol: Optional[str] = None
+
+class UserLanguageCreate(BaseModel):
+    code: str
+    name: str
+
 class LocationCreate(BaseModel):
     address: str
     latitude: Optional[float] = None
@@ -80,7 +89,6 @@ class UserProfileUpdate(BaseModel):
     registered_date: Optional[int] = None
     role: Optional[RoleEnum] = None
     
-
 class EmailPasswordForm(BaseModel):
     email: str
     password: str
