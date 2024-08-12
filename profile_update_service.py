@@ -5,9 +5,12 @@ from models.user_profile import UserProfile
 from models.locations import Location
 from models.currency import Currency
 from models.languages import Language
-from schemas.auth_models import User_Update, UserProfileUpdate, LocationCreate , UserCurrrencyCreate, UserLanguageCreate 
+from models.available_day  import AvailableDay
+from models.day import Days
+from schemas.auth_models import User_Update, UserProfileUpdate, LocationCreate , UserCurrrencyCreate, UserLanguageCreate , AvailableDays
 from fastapi import HTTPException, status
 from uuid import UUID
+from typing import List
 
 def update_user_details(db: Session, user_update: User_Update):
     try:
@@ -143,20 +146,37 @@ def update_currency(db: Session, user_id: UUID, currency_create: UserCurrrencyCr
     db.refresh(currency)
 
 
-def update_language(db: Session, user_id: UUID, language: UserLanguageCreate):
-    if not language.code  or not language.name:
+def update_language(db: Session, user_id: UUID, language_create: UserLanguageCreate):
+    if not language_create.code  or not language_create.name:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Language code and name are required")
     
     language = db.query(Language).filter(Language.user_id==user_id).first()
 
     if not language:
-        language = Language(user_id=user_id, code=language.code, name=language.name)
+        language = Language(user_id=user_id, code=language_create.code, name=language_create.name)
         db.add(language)
     else:
-        language.code = language.code
-        language.name = language.name
+        language.code = language_create.code
+        language.name = language_create.name
     db.commit()
     db.refresh(language)
 
 
+def update_available_days(db: Session, user_id: UUID, days: List[str]):
+    print(days)
+    # Get the IDs of the days to be added
+    day_ids = db.query(Days.id).filter(Days.name.in_(days)).all()
+    day_ids = [day_id for (day_id,) in day_ids]  # Convert list of tuples to list of IDs
 
+    if not day_ids:
+        raise HTTPException(status_code=400, detail="No valid days provided")
+
+    # Delete existing available days for this user
+    db.query(AvailableDay).filter(AvailableDay.user_id == user_id).delete()
+
+    # Add new available days
+    for day_id in day_ids:
+        available_day = AvailableDay(day_id=day_id, user_id=user_id)
+        db.add(available_day)
+
+    db.commit()

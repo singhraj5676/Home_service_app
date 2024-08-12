@@ -1,7 +1,7 @@
 # models/auth_models.py
 import uuid
 from fastapi import Form
-from typing import Optional
+from typing import Optional , List
 from datetime import datetime
 from pydantic import BaseModel
 from models.user_profile import RoleEnum
@@ -65,6 +65,15 @@ class UserCurrrencyCreate(BaseModel):
 class UserLanguageCreate(BaseModel):
     code: str
     name: str
+
+
+# class AvailableDays(BaseModel):
+#     available_days: List[int]  # List of day IDs
+
+
+class AvailableDays(BaseModel):
+    user_id: uuid.UUID
+    available_days: List[int]  
 
 class LocationCreate(BaseModel):
     address: str
