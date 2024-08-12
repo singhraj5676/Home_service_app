@@ -15,14 +15,18 @@ from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException, status
 from models.verification_token import VerificationToken
 from models.verification_type import VerificationType
-from schemas.auth_models import  UserCreate, User_Update, UserProfileUpdate, LocationCreate, User_Registration_Response , UserCurrrencyCreate, UserLanguageCreate
-from profile_update_service import update_user_details, update_user_profile, update_location, update_currency, update_language
+from schemas.auth_models import  UserCreate, User_Update, UserProfileUpdate, LocationCreate, User_Registration_Response , UserCurrrencyCreate, UserLanguageCreate, AvailableDays
+from profile_update_service import update_user_details, update_user_profile, update_location, update_currency, update_language, update_available_days
 from consts.const import EMAIL_PASSWORD, EMAIL_USER
 from auth import (get_current_active_user,get_current_user)
 from models.locations import Location
 from models.user_profile import UserProfile
 from response.user_response import User_Response
 from sqlalchemy.orm import Session, joinedload
+from uuid import UUID
+
+from models.day import Days
+from models.available_day import AvailableDay
 
 
 @router.post("/register", response_model=User_Registration_Response)
@@ -196,9 +200,11 @@ def update_profile(
     location_create: Optional[LocationCreate] = None,
     currency_create: Optional[UserCurrrencyCreate] = None,
     language_create: Optional[UserLanguageCreate] = None,
+    available_days_create: Optional[AvailableDays] = None,
 
     db: Session = Depends(get_db)
 ):
+    
     # Update user details
     update_user_details(db, user_update)
     
@@ -215,6 +221,12 @@ def update_profile(
     
     if language_create:
         update_language(db, user_update.id, language_create)
+    print('dadasdasda', available_days_create)
+
+    if available_days_create:
+        print('available days')
+        update_available_days(db, user_update.id, available_days_create.available_days)
+
 
     return {"message": "User details, profile, and location updated successfully"}
 
@@ -303,3 +315,38 @@ def get_customers_by_slug(
         raise HTTPException(status_code=404, detail="No customers found with this slug")
     
     return customers 
+
+
+
+
+@router.post("/update-available-days")
+def update_available_days(
+    available_days_create: AvailableDays,
+    db: Session = Depends(get_db)
+):
+    user_id = available_days_create.user_id
+    day_ids = available_days_create.available_days
+    
+    # Ensure user exists
+    user = db.query(UserInDB).filter(UserInDB.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Validate that all provided day_ids exist
+    valid_day_ids = db.query(Days.id).filter(Days.id.in_(day_ids)).all()
+    valid_day_ids = {day_id for (day_id,) in valid_day_ids}  # Convert to set for fast lookup
+
+    if not valid_day_ids:
+        raise HTTPException(status_code=400, detail="Some day IDs are not valid")
+
+    # Delete existing available days for this user
+    db.query(AvailableDay).filter(AvailableDay.user_id == user_id).delete()
+
+    # Add new available days
+    for day_id in valid_day_ids:
+        available_day = AvailableDay(day_id=day_id, user_id=user_id)
+        db.add(available_day)
+
+    db.commit()
+
+    return {"message": "Available days updated successfully"}   

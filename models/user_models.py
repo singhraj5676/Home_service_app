@@ -6,7 +6,8 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Column, String, Boolean, Float , Integer, DateTime
 
 
-
+from models.add_blockers import AddBlockers
+from models.available_day import AvailableDay
 
 class UserInDB(Base):
     __tablename__ = 'users'
@@ -33,7 +34,8 @@ class UserInDB(Base):
     verification_types = relationship("VerificationType", back_populates="user")
     languages = relationship("Language", back_populates="user")
     currency = relationship("Currency", back_populates="user")
-    # availability = relationship("AvailableDay", back_populates="user")
+    add_blockers = relationship("AddBlockers", back_populates="user")  # Relationship to AddBlockers
+    available_days = relationship("AvailableDay", back_populates="user")
 
 
 
