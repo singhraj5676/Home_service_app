@@ -66,15 +66,11 @@ class UserLanguageCreate(BaseModel):
     code: str
     name: str
 
-
-# class AvailableDays(BaseModel):
-#     available_days: List[int]  # List of day IDs
-
-
 class AvailableDays(BaseModel):
-    user_id: uuid.UUID
-    available_days: List[int]  
+    available_days: List[str] 
 
+class Add_Update_Blockers(BaseModel):
+    blockers: List[str]
 class LocationCreate(BaseModel):
     address: str
     latitude: Optional[float] = None

@@ -5,13 +5,15 @@ from models.user_profile import UserProfile
 from models.locations import Location
 from models.currency import Currency
 from models.languages import Language
+from models.blockers import Blockers
 from models.available_day  import AvailableDay
+from models.add_blockers import AddBlockers
 from models.day import Days
-from schemas.auth_models import User_Update, UserProfileUpdate, LocationCreate , UserCurrrencyCreate, UserLanguageCreate , AvailableDays
+from schemas.auth_models import User_Update, UserProfileUpdate, LocationCreate , UserCurrrencyCreate, UserLanguageCreate 
 from fastapi import HTTPException, status
 from uuid import UUID
 from typing import List
-
+import uuid
 def update_user_details(db: Session, user_update: User_Update):
     try:
         user = db.query(UserInDB).filter(UserInDB.id == user_update.id).one()
@@ -161,15 +163,17 @@ def update_language(db: Session, user_id: UUID, language_create: UserLanguageCre
     db.commit()
     db.refresh(language)
 
-
-def update_available_days(db: Session, user_id: UUID, days: List[str]):
-    print(days)
+def update_available_days(
+    db: Session, user_id: UUID, day_names: List[str]
+):
     # Get the IDs of the days to be added
-    day_ids = db.query(Days.id).filter(Days.name.in_(days)).all()
-    day_ids = [day_id for (day_id,) in day_ids]  # Convert list of tuples to list of IDs
-
+    day_ids = db.query(Days.id).filter(Days.name.in_(day_names)).all()
+    print(day_ids)
+    
     if not day_ids:
         raise HTTPException(status_code=400, detail="No valid days provided")
+
+    day_ids = [day_id for (day_id,) in day_ids]  # Convert list of tuples to list of IDs
 
     # Delete existing available days for this user
     db.query(AvailableDay).filter(AvailableDay.user_id == user_id).delete()
@@ -179,4 +183,28 @@ def update_available_days(db: Session, user_id: UUID, days: List[str]):
         available_day = AvailableDay(day_id=day_id, user_id=user_id)
         db.add(available_day)
 
+    db.commit()
+
+def add_update_blockers(db: Session, user_id: UUID, blockers: List[str]):
+    print('blockers',blockers)
+    
+
+    capitalized_blockers = [blocker.capitalize() for blocker in blockers]
+    print('capitalized_blockers',capitalized_blockers)
+    # Get the IDs of the blockers to be added
+    blockers_ids = db.query(Blockers.id).filter(Blockers.type.in_(capitalized_blockers)).all()
+    print('blo',blockers_ids)
+
+    if not blockers_ids:
+        raise HTTPException(status_code=400, detail="No valid blockers provided")
+    
+    blockers_ids = [blocker_id for (blocker_id,) in blockers_ids]
+    print('-----',blockers_ids)
+
+    db.query(AddBlockers).filter(AddBlockers.user_id == user_id).delete()
+
+    for blocker_id in blockers_ids:
+        blocker_opt = AddBlockers(blocker_id=blocker_id , user_id = user_id)
+        db.add(blocker_opt)
+    
     db.commit()

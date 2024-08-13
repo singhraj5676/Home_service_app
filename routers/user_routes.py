@@ -3,41 +3,30 @@
 import uuid
 import smtplib
 from uuid import uuid4
-from typing import Optional, Annotated, List
+from fastapi import Request
 from database import get_db
 from twilio.rest import Client
 from .main_router import router
 from auth import get_password_hash
 from sqlalchemy.orm import Session
 from email.mime.text import MIMEText
+from models.locations import Location
 from models.user_models import UserInDB
 from datetime import datetime, timedelta
-from fastapi import Depends, HTTPException, status
-from models.verification_token import VerificationToken
-from models.verification_type import VerificationType
-from schemas.auth_models import  UserCreate, User_Update, UserProfileUpdate, LocationCreate, User_Registration_Response , UserCurrrencyCreate, UserLanguageCreate, AvailableDays
-from profile_update_service import update_user_details, update_user_profile, update_location, update_currency, update_language, update_available_days
-from consts.const import EMAIL_PASSWORD, EMAIL_USER
-from auth import (get_current_active_user,get_current_user)
-from models.locations import Location
+from auth import (get_current_active_user)
 from models.user_profile import UserProfile
+from typing import Optional, Annotated, List
 from response.user_response import User_Response
-from sqlalchemy.orm import Session, joinedload
-from uuid import UUID
-
-from models.day import Days
-from models.available_day import AvailableDay
-
+from fastapi import Depends, HTTPException, status
+from consts.const import EMAIL_PASSWORD, EMAIL_USER
+from models.verification_type import VerificationType
+from models.verification_token import VerificationToken
+from schemas.auth_models import (UserCreate, User_Update, UserProfileUpdate, LocationCreate,
+                                 User_Registration_Response , UserCurrrencyCreate, UserLanguageCreate)
+from profile_update_service import update_user_details, update_user_profile, update_location, update_currency, update_language, update_available_days, add_update_blockers
 
 @router.post("/register", response_model=User_Registration_Response)
 async def register_user(user: UserCreate, db: Session = Depends(get_db)):
-    # Check if the username or email already exists
-    # existing_user = db.query(UserInDB).filter(UserInDB.first_name == user.first_name).first()
-    # if existing_user:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST,
-    #         detail="Username already registered"
-    #     )
     existing_email = db.query(UserInDB).filter(UserInDB.email == user.email).first()
     if existing_email:
         raise HTTPException(
@@ -193,18 +182,31 @@ def update_last_login(user_id: uuid.UUID, db: Session = Depends(get_db)):
     else:
         raise HTTPException(status_code=404, detail="User not found")
     
+
+
+# Modified function to handle direct list input
+
+
 @router.post("/update-profile")
-def update_profile(
+async def update_profile(
+    request: Request,
     user_update: User_Update,
     user_profile_update: Optional[UserProfileUpdate] = None,
     location_create: Optional[LocationCreate] = None,
     currency_create: Optional[UserCurrrencyCreate] = None,
     language_create: Optional[UserLanguageCreate] = None,
-    available_days_create: Optional[AvailableDays] = None,
+    # available_days_create: Optional[AvailableDays] = None,
+    available_days: Optional[List[str]] = None,  # Changed to List[str]
+    add_blockers: Optional[List[str]] = None,
 
     db: Session = Depends(get_db)
 ):
-    
+    raw_body = await request.body()
+    print("Raw request body:", raw_body.decode("utf-8"))
+
+    # Continue with your route logic
+    print("Available days:", available_days)
+
     # Update user details
     update_user_details(db, user_update)
     
@@ -216,47 +218,44 @@ def update_profile(
     if location_create:
         update_location(db, user_update.id, location_create)
 
+    # Update or create currency
     if currency_create:
         update_currency(db, user_update.id, currency_create)
     
+    # Update or create language
     if language_create:
         update_language(db, user_update.id, language_create)
-    print('dadasdasda', available_days_create)
 
-    if available_days_create:
-        print('available days')
-        update_available_days(db, user_update.id, available_days_create.available_days)
+    # Update available days
+    if available_days:
+        update_available_days(db, user_update.id, available_days)
 
+    if add_blockers:
+        print(f"Updating blockers for user_id: {add_blockers}")
+        add_update_blockers(db, user_update.id, add_blockers)
 
     return {"message": "User details, profile, and location updated successfully"}
 
 
-# @router.get("/{user_id}", response_model=User_Response)
-# def get_user_by_id(
-#     user_id: uuid.UUID,
-#     current_user: Annotated[User_Response, Depends(get_current_active_user)],
-#     db: Session = Depends(get_db)
-# ):
-#     if current_user.id != user_id:
-#         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this user")
-    
-#     user = db.query(UserInDB).filter(UserInDB.id == user_id).first()
-#     print(user)
-#     print(Location.user_id)
-#     if user is None:
-#         raise HTTPException(status_code=404, detail="User not found")
-#     return user
+
+
 
 @router.get("/{user_id}", response_model=User_Response)
 def get_user_by_id(
     user_id: uuid.UUID,
+    current_user: Annotated[User_Response, Depends(get_current_active_user)],
     db: Session = Depends(get_db)
 ):
-    user = db.query(UserInDB).options(joinedload(UserInDB.location)).filter(UserInDB.id == user_id).first()
+    if current_user.id != user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this user")
+    
+    user = db.query(UserInDB).filter(UserInDB.id == user_id).first()
     print(user)
+    print(Location.user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
 
 
 @router.get("/city/{city}", response_model=List[User_Response])
@@ -318,35 +317,3 @@ def get_customers_by_slug(
 
 
 
-
-@router.post("/update-available-days")
-def update_available_days(
-    available_days_create: AvailableDays,
-    db: Session = Depends(get_db)
-):
-    user_id = available_days_create.user_id
-    day_ids = available_days_create.available_days
-    
-    # Ensure user exists
-    user = db.query(UserInDB).filter(UserInDB.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # Validate that all provided day_ids exist
-    valid_day_ids = db.query(Days.id).filter(Days.id.in_(day_ids)).all()
-    valid_day_ids = {day_id for (day_id,) in valid_day_ids}  # Convert to set for fast lookup
-
-    if not valid_day_ids:
-        raise HTTPException(status_code=400, detail="Some day IDs are not valid")
-
-    # Delete existing available days for this user
-    db.query(AvailableDay).filter(AvailableDay.user_id == user_id).delete()
-
-    # Add new available days
-    for day_id in valid_day_ids:
-        available_day = AvailableDay(day_id=day_id, user_id=user_id)
-        db.add(available_day)
-
-    db.commit()
-
-    return {"message": "Available days updated successfully"}   
