@@ -4,8 +4,7 @@ from fastapi import FastAPI
 from routers.main_router import router
 from config import DATABASE_CONFIG
 from database import POSTGRES_API
-from routers import auth_routes, user_routes
-from models.verification_token import VerificationToken  # Ensure import
+from routers import auth_routes, user_routes , get_routes
 
 
 
@@ -19,6 +18,7 @@ def startup():
 
 app.include_router(auth_routes.router, prefix="/auth")
 app.include_router(user_routes.router, prefix="/users")
+app.include_router(get_routes.router, prefix="/get_routes")
 # app.include_router(user_routes.router, prefix="/users")
 
 

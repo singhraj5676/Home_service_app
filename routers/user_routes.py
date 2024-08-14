@@ -3,10 +3,10 @@
 import uuid
 import smtplib
 from uuid import uuid4
-from fastapi import Request
+from fastapi import Request, Query, APIRouter
 from database import get_db
 from twilio.rest import Client
-from .main_router import router
+# from .main_router import router
 from auth import get_password_hash
 from sqlalchemy.orm import Session
 from email.mime.text import MIMEText
@@ -29,6 +29,8 @@ from profile_update_service import (update_user_details, update_user_profile, up
 
 from response.location_response import Location_Response
 from utils.helper_func import *
+
+router = APIRouter()
 
 @router.post("/register", response_model=User_Registration_Response)
 async def register_user(user: UserCreate, db: Session = Depends(get_db)):
@@ -297,11 +299,33 @@ def get_workers_by_slug(
     
     return workers
 
-@router.get("/get_customers_by_slug/{slug}", response_model=List[User_Response])
+# @router.get("/get_customers_by_slug/{slug}", response_model=List[User_Response])
+# def get_customers_by_slug(
+#     slug: str,
+#     db: Session = Depends(get_db)
+# ):
+#     print('oooooooo',)
+#     customers = (
+#         db.query(UserInDB)
+#         .join(UserProfile)
+#         .join(Location)
+#         .filter(UserProfile.role == "customer", Location.slug == slug)
+#         .all()
+#     )
+
+#     if not customers:
+#         raise HTTPException(status_code=404, detail="No customers found with this slug")
+    
+#     user_responses = [create_user_response(user, db) for user in customers]
+#     return user_responses
+
+@router.get("/customers/by_slug", response_model=List[User_Response])
 def get_customers_by_slug(
-    slug: str,
+    slug: str = Query(..., description="Slug of the location to filter customers by"),
     db: Session = Depends(get_db)
 ):
+    print('Received slug:', slug)  # Debugging line
+    
     customers = (
         db.query(UserInDB)
         .join(UserProfile)
@@ -312,18 +336,26 @@ def get_customers_by_slug(
 
     if not customers:
         raise HTTPException(status_code=404, detail="No customers found with this slug")
-    
+
     user_responses = [create_user_response(user, db) for user in customers]
     return user_responses
 
-
-@router.get("/locations", response_model=List[Location_Response])
-def get_locations_by_partial_address(partial_address: str, db: Session = Depends(get_db)):
-    locations = db.query(Location).filter(Location.address.ilike(f"%{partial_address}%")).all()
+@router.get("/customers/by_id", response_model=List[User_Response])
+def get_customers_by_slug(
+    id: uuid.UUID,
+    db: Session = Depends(get_db)
+):
+    print('Received id:', id)  # Debugging line
     
-    if not locations:
-        raise HTTPException(status_code=404, detail="No locations found with this partial address")
+    customers = (
+        db.query(UserInDB)
+        .join(UserProfile)
+        .filter(UserProfile.role == "customer")
+        .first()
+    )
 
-    location_responses = [convert_location(location) for location in locations]
+    if not customers:
+        raise HTTPException(status_code=404, detail="No customers found with this slug")
 
-    return location_responses
+    user_responses = [create_user_response(user, db) for user in customers]
+    return user_responses
