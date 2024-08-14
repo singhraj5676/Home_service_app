@@ -1,19 +1,22 @@
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import NoResultFound
-from models.user_models import UserInDB
-from models.user_profile import UserProfile
-from models.locations import Location
-from models.currency import Currency
-from models.languages import Language
-from models.blockers import Blockers
-from models.available_day  import AvailableDay
-from models.add_blockers import AddBlockers
-from models.day import Days
-from schemas.auth_models import User_Update, UserProfileUpdate, LocationCreate , UserCurrrencyCreate, UserLanguageCreate 
-from fastapi import HTTPException, status
 from uuid import UUID
 from typing import List
-import uuid
+from models.day import Days
+from sqlalchemy.orm import Session
+from models.blockers import Blockers
+from models.currency import Currency
+from models.locations import Location
+from models.languages import Language
+from models.user_models import UserInDB
+from sqlalchemy.exc import NoResultFound
+from fastapi import HTTPException, status
+from models.add_blockers import AddBlockers
+from models.user_profile import UserProfile
+from models.available_day  import AvailableDay
+from schemas.auth_models import User_Update, UserProfileUpdate, LocationCreate , UserCurrrencyCreate, UserLanguageCreate 
+
+from utils.helper_func import *
+from response.user_response import User_Response
+
 def update_user_details(db: Session, user_update: User_Update):
     try:
         user = db.query(UserInDB).filter(UserInDB.id == user_update.id).one()
@@ -37,26 +40,7 @@ def update_user_details(db: Session, user_update: User_Update):
     db.commit()
     db.refresh(user)
 
-# def update_user_profile(db: Session, user_id: UUID, user_profile_update: UserProfileUpdate):
-#     user_profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
-#     if not user_profile:
-#         user_profile = UserProfile(user_id=user_id)
-#         db.add(user_profile)
-    
-#     user_profile.max_distance = user_profile_update.max_distance
-#     user_profile.currency = user_profile_update.currency
-#     user_profile.amount = user_profile_update.amount
-#     user_profile.experience = user_profile_update.experience
-#     user_profile.personal_note = user_profile_update.personal_note
-#     user_profile.published = user_profile_update.published
-#     user_profile.user_alert = user_profile_update.user_alert
-#     user_profile.personal_message = user_profile_update.personal_message
-#     user_profile.duration = user_profile_update.duration
-#     user_profile.registered_date = user_profile_update.registered_date
-#     user_profile.role = user_profile_update.role
 
-#     db.commit()
-#     db.refresh(user_profile)
 def update_user_profile(db: Session, user_id: UUID, user_profile_update: UserProfileUpdate):
     
     user_profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
@@ -166,8 +150,10 @@ def update_language(db: Session, user_id: UUID, language_create: UserLanguageCre
 def update_available_days(
     db: Session, user_id: UUID, day_names: List[str]
 ):
+    capitalized_days = [day_names.capitalize() for day in day_names]
+
     # Get the IDs of the days to be added
-    day_ids = db.query(Days.id).filter(Days.name.in_(day_names)).all()
+    day_ids = db.query(Days.id).filter(Days.name.in_(capitalized_days)).all()
     print(day_ids)
     
     if not day_ids:
@@ -188,7 +174,6 @@ def update_available_days(
 def add_update_blockers(db: Session, user_id: UUID, blockers: List[str]):
     print('blockers',blockers)
     
-
     capitalized_blockers = [blocker.capitalize() for blocker in blockers]
     print('capitalized_blockers',capitalized_blockers)
     # Get the IDs of the blockers to be added
@@ -208,3 +193,44 @@ def add_update_blockers(db: Session, user_id: UUID, blockers: List[str]):
         db.add(blocker_opt)
     
     db.commit()
+
+def get_blocker_types(user_id: int, db: Session) -> List[str]:
+    add_blockers = db.query(AddBlockers).filter(AddBlockers.user_id == user_id).all()
+    blocker_ids = [add_blocker.blocker_id for add_blocker in add_blockers]
+    blockers = db.query(Blockers).filter(Blockers.id.in_(blocker_ids)).all()
+    return [blocker.type for blocker in blockers] if blockers else []
+
+
+def get_days(user_id: int, db: Session) -> List[str]:
+    add_days = db.query(AvailableDay).filter(AvailableDay.user_id == user_id).all()
+    day_ids = [add_days.day_id for add_days in add_days]
+    dayss = db.query(Days).filter(Days.id.in_(day_ids)).all()
+    return [day.name for day in dayss] if dayss else []
+
+def create_user_response(user: UserInDB, db: Session) -> User_Response:
+
+    days = get_days(user.id, db)
+    blocker_response = get_blocker_types(user.id, db)
+    currencies = convert_currencies(user.currency) if user.currency else []
+    languages = convert_languages(user.languages) if user.languages else []
+    location = convert_location(user.location) if user.location else []
+    verification_types = convert_verification_types(user.verification_types) if user.verification_types else []
+
+
+    return User_Response(
+        id=user.id,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        email=user.email,
+        phone_number=user.phone_number,
+        is_verified=user.is_verified,
+        is_online=user.is_online,
+        is_suspended=user.is_suspended,
+        last_login=user.last_login,
+        location=location,
+        verification_types=verification_types,
+        currency=currencies,
+        languages=languages,
+        days=days,
+        blockers=blocker_response
+    )

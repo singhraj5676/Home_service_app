@@ -17,14 +17,14 @@ class User_Response(BaseModel):
     is_online: bool
     is_suspended: bool
     last_login: Optional[datetime] = None
-    location: Optional[Location_Response] = None  # Add location field
+    location: Optional[Location_Response] = None
     verification_types: Optional[List[VerificationType_Response]] = None
-    currency: Optional[List[Currency_Response]] = None  # Add currency field
+    currency: Optional[List[Currency_Response]] = None
     languages: Optional[List[Language_Response]] = None
-    # availability: Optional[List[WorkerDay_Response]] = None  # Add availability field
-
-
+    days: Optional[List[str]] = None
+    blockers: Optional[List[str]] = None  
 
     class Config:
         orm_mode = True
+
 
