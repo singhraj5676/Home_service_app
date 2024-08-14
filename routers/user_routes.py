@@ -23,7 +23,12 @@ from models.verification_type import VerificationType
 from models.verification_token import VerificationToken
 from schemas.auth_models import (UserCreate, User_Update, UserProfileUpdate, LocationCreate,
                                  User_Registration_Response , UserCurrrencyCreate, UserLanguageCreate)
-from profile_update_service import update_user_details, update_user_profile, update_location, update_currency, update_language, update_available_days, add_update_blockers
+from profile_update_service import (update_user_details, update_user_profile, update_location, update_currency, 
+                                    update_language, update_available_days, add_update_blockers, create_user_response)
+
+
+from response.location_response import Location_Response
+from utils.helper_func import *
 
 @router.post("/register", response_model=User_Registration_Response)
 async def register_user(user: UserCreate, db: Session = Depends(get_db)):
@@ -169,7 +174,6 @@ def resend_verification(user_id: uuid.UUID, verification_type: str, db: Session 
     return {"message": "Verification token resent"}
 
 
-
 @router.post("/update-login")
 def update_last_login(user_id: uuid.UUID, db: Session = Depends(get_db)):
     print('hii')
@@ -181,11 +185,6 @@ def update_last_login(user_id: uuid.UUID, db: Session = Depends(get_db)):
         return {"message": "Last login updated"}
     else:
         raise HTTPException(status_code=404, detail="User not found")
-    
-
-
-# Modified function to handle direct list input
-
 
 @router.post("/update-profile")
 async def update_profile(
@@ -237,26 +236,23 @@ async def update_profile(
     return {"message": "User details, profile, and location updated successfully"}
 
 
-
-
-
 @router.get("/{user_id}", response_model=User_Response)
 def get_user_by_id(
     user_id: uuid.UUID,
-    current_user: Annotated[User_Response, Depends(get_current_active_user)],
+    # current_user: Annotated[User_Response, Depends(get_current_active_user)],
     db: Session = Depends(get_db)
 ):
-    if current_user.id != user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this user")
+    # if current_user.id != user_id:
+    #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this user")
     
     user = db.query(UserInDB).filter(UserInDB.id == user_id).first()
-    print(user)
-    print(Location.user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    return user
 
+    # Create a User_Response object using the updated function
+    response = create_user_response(user, db)
 
+    return response
 
 @router.get("/city/{city}", response_model=List[User_Response])
 def get_users_by_city(city: str, db: Session = Depends(get_db)):
@@ -266,7 +262,9 @@ def get_users_by_city(city: str, db: Session = Depends(get_db)):
     if not users:
         raise HTTPException(status_code=404, detail="No users found in this city")
     
-    return users
+    user_responses = [create_user_response(user, db) for user in users]
+
+    return user_responses
 
 @router.get("/slug/{slug}", response_model=List[User_Response])
 def get_users_by_slug(slug: str, db: Session = Depends(get_db)):
@@ -276,7 +274,9 @@ def get_users_by_slug(slug: str, db: Session = Depends(get_db)):
     if not users:
         raise HTTPException(status_code=404, detail="No users found in this slug")
     
-    return users
+    user_responses = [create_user_response(user, db) for user in users]
+
+    return user_responses
 
 @router.get("/get_workers_by_slug/{slug}", response_model=List[User_Response])
 def get_workers_by_slug(
@@ -313,7 +313,17 @@ def get_customers_by_slug(
     if not customers:
         raise HTTPException(status_code=404, detail="No customers found with this slug")
     
-    return customers 
+    user_responses = [create_user_response(user, db) for user in customers]
+    return user_responses
 
 
+@router.get("/locations", response_model=List[Location_Response])
+def get_locations_by_partial_address(partial_address: str, db: Session = Depends(get_db)):
+    locations = db.query(Location).filter(Location.address.ilike(f"%{partial_address}%")).all()
+    
+    if not locations:
+        raise HTTPException(status_code=404, detail="No locations found with this partial address")
 
+    location_responses = [convert_location(location) for location in locations]
+
+    return location_responses
