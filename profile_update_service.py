@@ -150,7 +150,7 @@ def update_language(db: Session, user_id: UUID, language_create: UserLanguageCre
 def update_available_days(
     db: Session, user_id: UUID, day_names: List[str]
 ):
-    capitalized_days = [day_names.capitalize() for day in day_names]
+    capitalized_days = [day.capitalize() for day in day_names]
 
     # Get the IDs of the days to be added
     day_ids = db.query(Days.id).filter(Days.name.in_(capitalized_days)).all()
