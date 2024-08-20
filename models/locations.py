@@ -2,7 +2,6 @@
 
 from models.base import Base
 from sqlalchemy.orm import relationship
-from models.user_models import UserInDB
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Column, String, Float, Integer, ForeignKey
 

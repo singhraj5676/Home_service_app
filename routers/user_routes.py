@@ -196,7 +196,6 @@ async def update_profile(
     location_create: Optional[LocationCreate] = None,
     currency_create: Optional[UserCurrrencyCreate] = None,
     language_create: Optional[UserLanguageCreate] = None,
-    # available_days_create: Optional[AvailableDays] = None,
     available_days: Optional[List[str]] = None,  # Changed to List[str]
     add_blockers: Optional[List[str]] = None,
 

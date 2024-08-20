@@ -3,7 +3,7 @@ import uuid
 from fastapi import Form
 from typing import Optional , List
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from models.user_profile import RoleEnum
 from response.user_response import User_Response
 
@@ -107,3 +107,19 @@ class EmailPasswordForm(BaseModel):
         return cls(email=email, password=password)
     
 
+
+class ReviewBase(BaseModel):
+    score: int = Field(..., ge=1, le=5)  # Assuming score is between 1 and 5
+    text: Optional[str] = Field(None, max_length=1000)
+
+class ReviewCreate(ReviewBase):
+    author_id: uuid.UUID
+    receiver_id: uuid.UUID
+
+class ReviewUpdate(ReviewBase):
+    score: Optional[int] = Field(None, ge=1, le=5)  # Allow score to be optional for updates
+    text: Optional[str] = Field(None, max_length=1000)
+
+    class Config:
+        orm_mode = True  # Allows the model to be used with SQLAlchemy ORM models
+    
