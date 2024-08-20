@@ -32,3 +32,4 @@ def convert_location(location) -> Location_Response:
         country_code=location.country_code,
         place_id=location.place_id
     )
+

@@ -36,6 +36,8 @@ class UserInDB(Base):
     currency = relationship("Currency", back_populates="user")
     add_blockers = relationship("AddBlockers", back_populates="user")  # Relationship to AddBlockers
     available_days = relationship("AvailableDay", back_populates="user")
+    given_reviews = relationship("Review", foreign_keys="Review.author_id", back_populates="author")
+    received_reviews = relationship("Review", foreign_keys="Review.receiver_id", back_populates="receiver")
     # blockers = relationship("Blockers", back_populates="user")
 
 
