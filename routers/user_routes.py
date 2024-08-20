@@ -339,8 +339,10 @@ def get_customers_by_slug(
 
     user_responses = [create_user_response(user, db) for user in customers]
     return user_responses
+@router.get("/get_workers_by_slug/{slug}", response_model=List[User_Response])
 
-@router.get("/customers/by_id", response_model=List[User_Response])
+@router.get("/customers/{by_id}", response_model=List[User_Response])
+# @router.get("/{user_id}", response_model=User_Response)
 def get_customers_by_slug(
     id: uuid.UUID,
     db: Session = Depends(get_db)
