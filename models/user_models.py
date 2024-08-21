@@ -38,6 +38,8 @@ class UserInDB(Base):
     available_days = relationship("AvailableDay", back_populates="user")
     given_reviews = relationship("Review", foreign_keys="Review.author_id", back_populates="author")
     received_reviews = relationship("Review", foreign_keys="Review.receiver_id", back_populates="receiver")
+    adds_to_favorite = relationship("Favourite", foreign_keys="[Favourite.favors_id]", back_populates="favors")
+    added_by_favorites = relationship("Favourite", foreign_keys="[Favourite.favored_by_id]", back_populates="favored_by")
     # blockers = relationship("Blockers", back_populates="user")
 
 

@@ -80,3 +80,4 @@ def get_locations_by_lat_lng(
     location_responses = [convert_location(location) for location in locations]
 
     return location_responses
+

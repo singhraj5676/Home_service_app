@@ -5,9 +5,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Column, String, Integer, ForeignKey
 
 
-
-
-
 class Review(Base):
     __tablename__ = "review"  # It's conventional to use lowercase table names
 
