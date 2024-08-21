@@ -122,4 +122,8 @@ class ReviewUpdate(ReviewBase):
 
     class Config:
         orm_mode = True  # Allows the model to be used with SQLAlchemy ORM models
-    
+
+
+class FavoriteAction(BaseModel):
+    favorite_id: uuid.UUID = Field(..., description="UUID of the user to be favored or unfavored")
+    action: str = Field(..., description="Action to perform, either 'add' or 'remove'")

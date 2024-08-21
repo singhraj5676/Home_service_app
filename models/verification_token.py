@@ -15,5 +15,4 @@ class VerificationToken(Base):
     type = Column(String, nullable=False) 
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'),nullable=False)
     
-    
     user = relationship("UserInDB", back_populates="verification_tokens")

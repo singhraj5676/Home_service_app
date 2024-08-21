@@ -5,12 +5,12 @@ from utils.helper_func import *
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Query
 from fastapi import Depends, HTTPException
-from response.review_response import ReviewResponse
+from response.review_response import ReviewResponse, ReviewGetResponse
 from models.review import Review
 from schemas.auth_models  import ReviewCreate, ReviewUpdate
 from models.user_models import UserInDB
 import uuid
-
+from uuid import UUID
 router = APIRouter()
 
 
@@ -69,4 +69,46 @@ def update_review(review_id: uuid.UUID, review_data: ReviewUpdate, db: Session =
     # Return the updated review using the response schema
     return review
 
+@router.get("/{review_id}", response_model=ReviewGetResponse)
+def get_review(review_id: uuid.UUID, db: Session = Depends(get_db)):
+    print(review_id)
 
+    review = db.query(Review).filter(Review.id == review_id).first()
+
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+    
+    return review
+
+
+@router.get("/reviews/by-receiver", response_model=List[ReviewGetResponse])
+def get_reviews_by_author(
+    receiver_id: uuid.UUID = Query(..., description="The UUID of the author"),
+    db: Session = Depends(get_db)
+):
+    # This print statement helps to debug if the UUID is being parsed
+    print("Received author_id:", receiver_id)
+
+    # Query for reviews by the author
+    receiver_reviews = db.query(Review).filter(Review.receiver_id == receiver_id).all()
+
+    if not receiver_reviews:
+        raise HTTPException(status_code=404, detail="Review not found")
+    
+    return receiver_reviews
+
+@router.get("/reviews/by-author", response_model=List[ReviewGetResponse])
+def get_reviews_by_author(
+    author_id: uuid.UUID = Query(..., description="The UUID of the author"),
+    db: Session = Depends(get_db)
+):
+    # This print statement helps to debug if the UUID is being parsed
+    print("Received author_id:", author_id)
+
+    # Query for reviews by the author
+    author_reviews = db.query(Review).filter(Review.author_id == author_id).all()
+
+    if not author_reviews:
+        raise HTTPException(status_code=404, detail="Review not found")
+    
+    return author_reviews
