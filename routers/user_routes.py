@@ -77,7 +77,7 @@ def generate_verification_token(user_id: uuid.UUID, db: Session, verification_ty
         type=verification_type
     )
     db.add(verification_token)
-    db.commit()
+    db.commit() 
     
     return token
 

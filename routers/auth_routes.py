@@ -10,7 +10,7 @@ from schemas.auth_models import Token, User_Response
 from fastapi import  Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from models.verification_token import VerificationToken
-from auth import (authenticate_user, create_access_token, get_current_active_user,ACCESS_TOKEN_EXPIRE_MINUTES)
+from auth import (authenticate_user, create_access_token, create_refresh_token, get_current_active_user,ACCESS_TOKEN_EXPIRE_MINUTES)
 from schemas.auth_models import EmailPasswordForm
 
 @router.post("/token", response_model=Token)
@@ -36,7 +36,12 @@ async def login_for_access_token(
     access_token = create_access_token(
         data={"sub": user.email }, expires_delta=access_token_expires
     )
-    return Token(access_token=access_token, token_type="bearer")
+
+    refresh_token_expires = timedelta(days=7)  # Set the expiration for refresh tokens
+    refresh_token = create_refresh_token(
+        data={"sub": user.email}, expires_delta=refresh_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer", refresh_token=refresh_token)
 
 
 @router.get("/users/me/", response_model=User_Response)
@@ -53,6 +58,40 @@ async def read_own_items(
 ):
     return [{"item_id": current_user.id}]
 
+
+# @router.post("/token/refresh", response_model=Token)
+# async def refresh_access_token(
+#     refresh_token: str = Form(...),
+#     db: Session = Depends(get_db)
+# ) -> Token:
+#     try:
+#         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+#         email = payload.get("sub")
+#         if email is None:
+#             raise HTTPException(
+#                 status_code=status.HTTP_403_FORBIDDEN,
+#                 detail="Invalid refresh token",
+#             )
+#         user = get_user(db, email=email)  # Implement this function to fetch user by email
+#         if not user:
+#             raise HTTPException(
+#                 status_code=status.HTTP_404_NOT_FOUND,
+#                 detail="User not found",
+#             )
+#         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+#         access_token = create_access_token(
+#             data={"sub": user.email }, expires_delta=access_token_expires
+#         )
+#         return Token(
+#             access_token=access_token,
+#             token_type="bearer",
+#             refresh_token=refresh_token  # Optional: You can return the same refresh token
+#         )
+#     except JWTError:
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#             detail="Invalid refresh token",
+#         )
 
 # routers/auth_routes.py
 # @router.get("/verify/{token}", response_model=User_Response)
