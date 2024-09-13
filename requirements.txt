@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pyjwt
+passlib
+twilio
+psycopg2-binary
+sqlalchemy
+python-dotenv
+python-multipart
