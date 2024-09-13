@@ -6,10 +6,13 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 from models.user_profile import RoleEnum
 from response.user_response import User_Response
+from fastapi.middleware.cors import CORSMiddleware
 
 class Token(BaseModel):
     access_token: str
     token_type: str
+    refresh_token: str  # Add this line
+
 
 class TokenData(BaseModel):
     username: str | None = None
