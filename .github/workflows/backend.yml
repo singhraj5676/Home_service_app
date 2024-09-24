@@ -21,20 +21,23 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}  # Reference to your secret
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # Reference to your secret
         run: |
+          echo "AWS Account ID: $AWS_ACCOUNT_ID"  # Check if AWS_ACCOUNT_ID is set correctly
           echo "Logging into Amazon ECR..."
           aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.eu-west-1.amazonaws.com
-          echo "Logged into Amazon ECR successfully.                   "
+          echo "Logged into Amazon ECR successfully."
 
       - name: Build Docker image
         run: |
           echo "Building Docker image..."
           docker build -t backend .
-          echo "Docker image built successfully.                  "
+          echo "Docker image built successfully."
 
       - name: Push Docker image
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}  # Ensure AWS_ACCOUNT_ID is set again in this step
         run: |
           echo "Tagging Docker image..."
-          echo "AWS Account ID: $AWS_ACCOUNT_ID"
+          echo "AWS Account ID: $AWS_ACCOUNT_ID"  # Print it again
           docker tag backend:latest $AWS_ACCOUNT_ID.dkr.ecr.us-west-1.amazonaws.com/backend:latest
           echo "Pushing Docker image to ECR..."
           docker push $AWS_ACCOUNT_ID.dkr.ecr.us-west-1.amazonaws.com/backend:latest
