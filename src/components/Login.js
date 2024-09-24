@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './Login.css'; // Import the CSS file
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -13,9 +14,6 @@ const Login = () => {
       const formData = new URLSearchParams();
       formData.append('email', email);
       formData.append('password', password);
-
-      console.log(formData.get('username'));
-      console.log(formData.get('password')); // Log the form data for debugging purposes
 
       const response = await axios.post('http://127.0.0.1:8000/auth/token', formData, {
         headers: {
@@ -32,29 +30,31 @@ const Login = () => {
   };
 
   return (
-    <div>
+    <div className="login-container">
       <h2>Login</h2>
-      <form onSubmit={handleLogin}>
-        <div>
+      <form onSubmit={handleLogin} className="login-form">
+        <div className="form-group">
           <label>Email:</label>
           <input
             type="email"
+            className="form-input"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
-        <div>
+        <div className="form-group">
           <label>Password:</label>
           <input
             type="password"
+            className="form-input"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
         </div>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button type="submit">Login</button>
+        {error && <p className="error-message">{error}</p>}
+        <button type="submit" className="submit-button">Login</button>
       </form>
     </div>
   );

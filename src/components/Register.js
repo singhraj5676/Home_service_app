@@ -1,6 +1,10 @@
 // src/components/Register.js
 import React, { useState } from 'react';
 import axios from 'axios';
+import { TextField, Button, Typography, Container, Snackbar } from '@mui/material';
+import { Alert } from '@mui/material';
+import { motion } from 'framer-motion'; // Import motion
+import './Register.css';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -8,9 +12,13 @@ const Register = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setError(null);
+    setSuccessMessage('');
 
     try {
       const response = await axios.post('http://127.0.0.1:8000/users/register', {
@@ -19,49 +27,82 @@ const Register = () => {
         phone_number: phoneNumber,
       });
 
-      console.log(response.data); // Handle the registration success message
       setSuccessMessage('Registration successful! Please verify your email.');
-      setError(null);
+      setSnackbarMessage('Registration successful!');
+      setOpenSnackbar(true);
     } catch (error) {
-      setError("Registration failed. Please check your details.");
+      setError('Registration failed. Please check your details.');
+      setSnackbarMessage('Registration failed. Please check your details.');
+      setOpenSnackbar(true);
     }
   };
 
   return (
-    <div>
-      <h2>Register</h2>
-      <form onSubmit={handleRegister}>
-        <div>
-          <label>Email:</label>
-          <input
+    <Container className="register-container" maxWidth="sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Typography variant="h4" gutterBottom align="center">
+          Register
+        </Typography>
+        <form onSubmit={handleRegister} className="register-form">
+          <TextField
+            label="Email"
             type="email"
+            variant="outlined"
+            fullWidth
+            margin="normal"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            className="form-input"
           />
-        </div>
-        <div>
-          <label>Password:</label>
-          <input
+          <TextField
+            label="Password"
             type="password"
+            variant="outlined"
+            fullWidth
+            margin="normal"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            className="form-input"
           />
-        </div>
-        <div>
-          <label>Phone Number (optional):</label>
-          <input
+          <TextField
+            label="Phone Number (optional)"
             type="text"
+            variant="outlined"
+            fullWidth
+            margin="normal"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
+            className="form-input"
           />
-        </div>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        {successMessage && <p style={{ color: 'green' }}>{successMessage}</p>}
-        <button type="submit">Register</button>
-      </form>
-    </div>
+          {error && <Alert severity="error" className="error-message">{error}</Alert>}
+          {successMessage && <Alert severity="success" className="success-message">{successMessage}</Alert>}
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            fullWidth
+            className="submit-button"
+          >
+            Register
+          </Button>
+        </form>
+        <Snackbar
+          open={openSnackbar}
+          autoHideDuration={6000}
+          onClose={() => setOpenSnackbar(false)}
+        >
+          <Alert onClose={() => setOpenSnackbar(false)} severity={error ? 'error' : 'success'}>
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
+      </motion.div>
+    </Container>
   );
 };
 
