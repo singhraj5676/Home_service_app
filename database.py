@@ -38,9 +38,17 @@ class POSTGRES_API:
             self.conn.close()
             self.conn = None
 
+    # def create_tables(self):
+    #     print('Creating')
+    #     Base.metadata.create_all(self.engine)
     def create_tables(self):
-        print('Creating')
-        Base.metadata.create_all(self.engine)
+        try:
+            print('Attempting to create tables...')
+            Base.metadata.create_all(self.engine)
+            print('Tables created successfully.')
+        except Exception as e:
+            print(f'Error creating tables: {e}')
+
 
     def execute_query(self, query, params=None):
         self.connect()
@@ -61,7 +69,6 @@ class POSTGRES_API:
 def get_db():
     print('Getting DB')
     db = POSTGRES_API(**DATABASE_CONFIG)
-    print('-----', db)
     try:
         session = db.get_session()
         yield session

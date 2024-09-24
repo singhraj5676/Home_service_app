@@ -5,9 +5,12 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Column, String, Boolean, Float , Integer, DateTime
 
-
+from models.chats import Chat
+from models.payment import Payment
+from models.messages import Message
 from models.add_blockers import AddBlockers
 from models.available_day import AvailableDay
+from models.chat_participant import ChatParticipant
 
 class UserInDB(Base):
     __tablename__ = 'users'
@@ -40,6 +43,10 @@ class UserInDB(Base):
     received_reviews = relationship("Review", foreign_keys="Review.receiver_id", back_populates="receiver")
     adds_to_favorite = relationship("Favourite", foreign_keys="[Favourite.favors_id]", back_populates="favors")
     added_by_favorites = relationship("Favourite", foreign_keys="[Favourite.favored_by_id]", back_populates="favored_by")
+    payments = relationship("Payment", back_populates="user")
+
+    chats = relationship("ChatParticipant", back_populates="user")
+    sent_messages = relationship("Message", back_populates="sender")
     # blockers = relationship("Blockers", back_populates="user")
 
 

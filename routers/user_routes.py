@@ -3,10 +3,10 @@
 import uuid
 import smtplib
 from uuid import uuid4
-from fastapi import Request, Query, APIRouter
 from database import get_db
-from twilio.rest import Client
-# from .main_router import router
+from utils.helper_func import *
+# from twilio.rest import Client
+from typing import Optional, List
 from auth import get_password_hash
 from sqlalchemy.orm import Session
 from email.mime.text import MIMEText
@@ -15,7 +15,7 @@ from models.user_models import UserInDB
 from datetime import datetime, timedelta
 from auth import (get_current_active_user)
 from models.user_profile import UserProfile
-from typing import Optional, Annotated, List
+from fastapi import Request, Query, APIRouter
 from response.user_response import User_Response
 from fastapi import Depends, HTTPException, status
 from consts.const import EMAIL_PASSWORD, EMAIL_USER
@@ -27,8 +27,6 @@ from profile_update_service import (update_user_details, update_user_profile, up
                                     update_language, update_available_days, add_update_blockers, create_user_response)
 
 
-from response.location_response import Location_Response
-from utils.helper_func import *
 
 router = APIRouter()
 
