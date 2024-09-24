@@ -130,3 +130,24 @@ class ReviewUpdate(ReviewBase):
 class FavoriteAction(BaseModel):
     favorite_id: uuid.UUID = Field(..., description="UUID of the user to be favored or unfavored")
     action: str = Field(..., description="Action to perform, either 'add' or 'remove'")
+
+
+class ChatCreate(BaseModel):
+    customer_id: int
+    worker_id: int
+    is_group: bool = False
+
+class MessageCreate(BaseModel):
+    chat_id: int
+    sender_id: int
+    text: str
+
+class MessageResponse(BaseModel):
+    id: int
+    chat_id: int
+    sender_id: int
+    text: str
+    created_at: datetime
+
+    class Config:
+        orm_mode = True

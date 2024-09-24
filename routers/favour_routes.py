@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from models.favorites  import Favourite
 from database import get_db
-from schemas.auth_models import FavoriteAction
-from models.user_models import UserInDB
 from auth import get_current_user
+from sqlalchemy.orm import Session
+from models.user_models import UserInDB
+from models.favorites  import Favourite
+from schemas.auth_models import FavoriteAction
+from fastapi import APIRouter, Depends, HTTPException
+
 
 router = APIRouter()
 

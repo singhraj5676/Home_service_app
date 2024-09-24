@@ -1,9 +1,9 @@
 #available_day.py
-from sqlalchemy import Column, Integer, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
 from models.base import Base
-from models.day import Days
+from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, Integer, ForeignKey
+
 
 class AvailableDay(Base):
     __tablename__ = 'available_days'
