@@ -1,8 +1,7 @@
-from sqlalchemy import Column, Integer, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
 from models.base import Base
-from models.blockers import Blockers
+from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, Integer, ForeignKey
 
 class AddBlockers(Base):
     __tablename__ = 'add_blockers'

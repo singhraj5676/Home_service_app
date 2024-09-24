@@ -1,19 +1,20 @@
-from fastapi import APIRouter, Query, Depends, HTTPException
-from sqlalchemy.orm import Session
-from typing import List, Optional
 from database import get_db
-from response.user_response import User_Response
-from models.user_models import UserInDB
-from models.user_profile import UserProfile
+from sqlalchemy import func
+from models.day import Days
+from typing import List, Optional
+from sqlalchemy.orm import Session
+from models.currency import Currency
+from models.currency import Currency
 from models.locations import Location
 from models.languages import Language
-from profile_update_service import create_user_response
-from sqlalchemy import func
-from models.currency import Currency
-from models.blockers import Blockers
-from models.currency import Currency
+from models.user_models import UserInDB
+from models.user_profile import UserProfile
 from models.available_day import AvailableDay
-from models.day import Days
+from response.user_response import User_Response
+from profile_update_service import create_user_response
+from fastapi import APIRouter, Query, Depends, HTTPException
+
+
 
 router = APIRouter()
 

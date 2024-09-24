@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import relationship
 from models.base import Base
+from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String
 
 class Blockers(Base):
     __tablename__ = 'blockers'

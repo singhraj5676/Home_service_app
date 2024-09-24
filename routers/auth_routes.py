@@ -1,15 +1,11 @@
 # routers/auth_routes.py
-import datetime
 from database import get_db
 from typing import Annotated
 from datetime import timedelta
 from .main_router import router
 from sqlalchemy.orm import Session
-from models.user_models import UserInDB
 from schemas.auth_models import Token, User_Response
 from fastapi import  Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
-from models.verification_token import VerificationToken
 from auth import (authenticate_user, create_access_token, create_refresh_token, get_current_active_user,ACCESS_TOKEN_EXPIRE_MINUTES)
 from schemas.auth_models import EmailPasswordForm
 
