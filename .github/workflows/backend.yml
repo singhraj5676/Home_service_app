@@ -12,23 +12,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Update AWS CLI to Latest Version
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y unzip curl
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install --update
-          aws --version  # Verifying that the update was successful
-
       - name: Verify AWS Credentials and Region
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: eu-west-1
+          AWS_SIGNATURE_VERSION: "v4"
         run: |
           aws sts get-caller-identity
-
+          
       - name: Log in to Amazon ECR
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -36,26 +28,18 @@ jobs:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_DEFAULT_REGION: eu-west-1
         run: |
-          echo "AWS_ACCOUNT_ID is set"
-          echo "AWS_ACCESS_KEY_ID is set"
-          echo "AWS_SECRET_ACCESS_KEY is set"
-          
+          echo "Logging into ECR..."
           aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.eu-west-1.amazonaws.com
           
-          echo "Logged into Amazon ECR successfully."
-
       - name: Build Docker image
         run: |
           echo "Building Docker image..."
           docker build -t backend ./House_Service_App_backend
-          echo "Docker image built successfully."
-
+          
       - name: Tag and Push Docker image
         env:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
         run: |
           echo "Tagging Docker image..."
           docker tag backend:latest $AWS_ACCOUNT_ID.dkr.ecr.eu-west-1.amazonaws.com/backend-repo:latest
-          echo "Pushing Docker image to ECR..."
           docker push $AWS_ACCOUNT_ID.dkr.ecr.eu-west-1.amazonaws.com/backend-repo:latest
-          echo "Docker image pushed successfully."
