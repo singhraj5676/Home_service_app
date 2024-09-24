@@ -23,7 +23,7 @@ jobs:
         run: |
           echo "Logging into Amazon ECR..."
           aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.eu-west-1.amazonaws.com
-          echo "Logged into Amazon ECR successfully."
+          echo "Logged into Amazon ECR successfully.                   "
 
       - name: Build Docker image
         run: |
