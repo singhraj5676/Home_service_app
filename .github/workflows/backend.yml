@@ -1,0 +1,29 @@
+name: Build and Deploy Backend
+
+on:
+  push:
+    branches:
+      - backend  # Replace with your actual backend branch name
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v1
+
+      - name: Log in to Amazon ECR
+        run: |
+          aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin <aws_account_id>.dkr.ecr.eu-west-1.amazonaws.com
+
+      - name: Build Docker image
+        run: |
+          docker build -t backend ./House_Service_App_backend
+
+      - name: Push Docker image
+        run: |
+          docker tag backend:latest <aws_account_id>.dkr.ecr.eu-west-1.amazonaws.com/backend-repo:latest
+          docker push <aws_account_id>.dkr.ecr.eu-west-1.amazonaws.com/backend-repo:latest
