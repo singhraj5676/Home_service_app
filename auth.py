@@ -12,7 +12,6 @@ from datetime import datetime, timedelta, timezone
 from schemas.auth_models import TokenData, User_Response
 from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
 
-# pass
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2 scheme
