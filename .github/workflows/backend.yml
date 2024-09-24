@@ -22,7 +22,6 @@ jobs:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }} 
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # Reference to your secret
         run: |
-          echo "Checking if AWS_ACCOUNT_ID is set"
           echo "AWS_ACCOUNT_ID is set"
           echo "AWS_ACCESS_KEY_ID is set"
           echo "AWS_SECRET_ACCESS_KEY is set"
