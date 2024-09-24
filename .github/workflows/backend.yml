@@ -28,7 +28,7 @@ jobs:
       - name: Build Docker image
         run: |
           echo "Building Docker image..."
-          docker build -t backend ./House_Service_App_backend
+          docker build -t backend .
           echo "Docker image built successfully."
 
       - name: Push Docker image
