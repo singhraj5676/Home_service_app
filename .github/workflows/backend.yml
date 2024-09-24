@@ -26,7 +26,7 @@ jobs:
           echo "AWS_ACCESS_KEY_ID: [REDACTED]"  # Do not print sensitive values
           
           # Log in to ECR
-          aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.eu-west-1.amazonaws.com
+          echo $(aws ecr get-login-password --region eu-west-1) | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.eu-west-1.amazonaws.com
 
       - name: Build Docker image
         run: |
