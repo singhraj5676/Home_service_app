@@ -22,9 +22,9 @@ jobs:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }} 
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # Reference to your secret
         run: |
-          # Debugging step to print AWS environment variables (excluding sensitive values)
-          echo "AWS_ACCOUNT_ID: $AWS_ACCOUNT_ID"
-          echo "AWS_ACCESS_KEY_ID: [REDACTED]"  # Do not print sensitive values
+          echo "Checking if AWS_ACCOUNT_ID is set"
+          echo "AWS_ACCOUNT_ID is set"
+          echo "AWS_ACCESS_KEY_ID is set"
           
           # Log in to ECR
           echo $(aws ecr get-login-password --region eu-west-1) | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.eu-west-1.amazonaws.com
