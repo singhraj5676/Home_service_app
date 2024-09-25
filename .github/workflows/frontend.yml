@@ -3,7 +3,7 @@ name: Build and Deploy Frontend
 on:
   push:
     branches:
-      - frontend  # Replace with your actual frontend branch name
+      - frontend-branch # Replace with your actual frontend branch name
 
 jobs:
   build:
@@ -17,13 +17,13 @@ jobs:
 
       - name: Log in to Amazon ECR
         run: |
-          aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin <aws_account_id>.dkr.ecr.eu-west-1.amazonaws.com
+          aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.us-west-1.amazonaws.com
 
       - name: Build Docker image
         run: |
-          docker build -t frontend ./Home_Service_App_frontend
-
+          docker build -t frontend .
+          
       - name: Push Docker image
         run: |
-          docker tag frontend:latest <aws_account_id>.dkr.ecr.eu-west-1.amazonaws.com/frontend-repo:latest
-          docker push <aws_account_id>.dkr.ecr.eu-west-1.amazonaws.com/frontend-repo:latest
+          docker tag frontend:latest <aws_account_id>.dkr.ecr.us-west-1.amazonaws.com/frontend:latest
+          docker push <aws_account_id>.dkr.ecr.us-west-1.amazonaws.com/frontend:latest
